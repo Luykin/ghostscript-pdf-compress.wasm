@@ -132,4 +132,3 @@ export function CompressionModeDropdown({ value, onChange, id = "compression-mod
 }
 
 export { compressionModes };
-</DropdownAction>
