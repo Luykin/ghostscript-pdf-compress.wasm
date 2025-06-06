@@ -75,8 +75,7 @@ export async function processZipFiles(
   if (nonZipFiles.length > 0) {
     result.push(...nonZipFiles);
     if (onProgress) {
-      const progress = nonZipFiles.length / (nonZipFiles.length + zipFiles.length);
-      onProgress(progress);
+      onProgress(0.05); // Start with 5% progress
     }
   }
 
@@ -90,11 +89,14 @@ export async function processZipFiles(
     }
 
     try {
+      // Loading ZIP - 10% of progress
       const arrayBuffer = await file.arrayBuffer();
       const zip = await JSZip.loadAsync(arrayBuffer);
+      if (onProgress) onProgress(0.1);
+      
       const invalidFiles = [];
 
-      // Validate filenames
+      // Validate filenames - 5% of progress
       const validateFilenames = async (folder, path = '') => {
         for (const [name, item] of Object.entries(folder)) {
           const currentPath = path ? `${path}/${name}` : name;
@@ -112,6 +114,7 @@ export async function processZipFiles(
       };
 
       await validateFilenames(zip.files);
+      if (onProgress) onProgress(0.15);
 
       if (invalidFiles.length > 0) {
         const errorMsg = `Files with names longer than 200 characters detected:\n${invalidFiles.join('\n')}`;
@@ -131,14 +134,15 @@ export async function processZipFiles(
       let pdfCount = 0;
       let processedPdfs = 0;
 
-      // First count PDFs
+      // Count PDFs - 5% of progress
       for (const [path, zipEntry] of Object.entries(zip.files)) {
         if (!zipEntry.dir && path.toLowerCase().endsWith('.pdf')) {
           pdfCount++;
         }
       }
+      if (onProgress) onProgress(0.2);
 
-      // Process PDFs
+      // Process PDFs - 60% of progress
       for (const [path, zipEntry] of Object.entries(zip.files)) {
         if (signal?.aborted) break;
 
@@ -157,7 +161,11 @@ export async function processZipFiles(
                 outputZip.file(path, pdfBuffer);
               }
               processedPdfs++;
-              onProgress?.((processedZips + (processedPdfs / pdfCount)) / totalZips);
+              // Calculate progress between 20% and 80%
+              if (onProgress) {
+                const pdfProgress = processedPdfs / pdfCount;
+                onProgress(0.2 + (pdfProgress * 0.6));
+              }
             }
           } else {
             const content = await zipEntry.async('uint8array');
@@ -166,13 +174,19 @@ export async function processZipFiles(
         }
       }
 
+      // Generate final ZIP - remaining 20% of progress
+      if (onProgress) onProgress(0.8);
+      
       const outputBlob = await outputZip.generateAsync({
         type: 'blob',
         compression: 'DEFLATE',
         compressionOptions: { level: 9 }
       });
+      
+      if (onProgress) onProgress(0.9);
 
       result.push(new File([outputBlob], `compressed_${file.name}`, { type: 'application/zip' }));
+      if (onProgress) onProgress(1.0);
 
     } catch (error) {
       if (!signal?.aborted) {
@@ -182,7 +196,6 @@ export async function processZipFiles(
       }
     } finally {
       processedZips++;
-      onProgress?.(processedZips / totalZips);
     }
   }
 
