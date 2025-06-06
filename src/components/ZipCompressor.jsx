@@ -33,7 +33,6 @@ export function ZipCompressor() {
       const result = await processZipFiles(
         [file],
         {
-          quality: "ebook",
           onProgress: (p) => setProgress(Math.round(p * 100)),
           onError: (error) => {
             console.error("Error processing file:", error);

@@ -6,8 +6,7 @@ var Module;
 
 function _GSPS2PDF(
   dataStruct,
-  responseCallback,
-  quality = 'ebook'
+  responseCallback
 ) {
   var xhr = new XMLHttpRequest();
   xhr.open("GET", dataStruct.psDataURL);
@@ -33,7 +32,7 @@ function _GSPS2PDF(
       arguments: [
         "-sDEVICE=pdfwrite",
         "-dCompatibilityLevel=1.4",
-        `-dPDFSETTINGS=/${quality}`,
+        "-dPDFSETTINGS=/ebook",
         "-DNOPAUSE",
         "-dQUIET",
         "-dBATCH",
@@ -64,8 +63,7 @@ self.addEventListener('message', function({data:e}) {
     return;
   }
   _GSPS2PDF(e.data, ({pdfData, filename}) => 
-    self.postMessage({ pdfData, filename }), 
-    e.data.quality || 'ebook'
+    self.postMessage({ pdfData, filename })
   );
 });
 
