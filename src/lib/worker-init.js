@@ -8,7 +8,10 @@ export async function _GSPS2PDF(dataStruct) {
   
   return new Promise((resolve, reject) => {
     const listener = (e) => {
-      resolve(e.data);
+      const { pdfData } = e.data;
+      const blob = new Blob([pdfData], { type: 'application/pdf' });
+      const url = URL.createObjectURL(blob);
+      resolve(url);
       worker.removeEventListener('message', listener);
       setTimeout(() => worker.terminate(), 0);
     };
