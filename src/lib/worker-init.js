@@ -25,10 +25,7 @@ export async function _GSPS2PDF(dataStruct) {
         return;
       }
       
-      const { pdfData } = e.data;
-      const blob = new Blob([pdfData], { type: 'application/pdf' });
-      const url = URL.createObjectURL(blob);
-      resolve(url);
+      resolve(e.data.pdfDataURL);
       worker.removeEventListener('message', listener);
       setTimeout(() => worker.terminate(), 0);
     };

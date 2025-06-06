@@ -23,10 +23,9 @@ function _GSPS2PDF(
       postRun: [
         function () {
           var uarray = self.Module.FS.readFile(dataStruct.outputFilename || "output.pdf", { encoding: "binary" });
-          responseCallback({ 
-            pdfData: uarray,
-            filename: dataStruct.outputFilename || "output.pdf"
-          });
+          var blob = new Blob([uarray], { type: "application/pdf" });
+          var pdfDataURL = self.URL.createObjectURL(blob);
+          responseCallback({ pdfDataURL });
         },
       ],
       arguments: [
@@ -62,9 +61,7 @@ self.addEventListener('message', function({data:e}) {
   if (e.target !== 'wasm'){
     return;
   }
-  _GSPS2PDF(e.data, ({pdfData, filename}) => 
-    self.postMessage({ pdfData, filename })
-  );
+  _GSPS2PDF(e.data, (data) => self.postMessage(data));
 });
 
 console.log("Worker ready");
