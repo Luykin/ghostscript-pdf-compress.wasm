@@ -33,18 +33,25 @@ async function compressPdfWithGs(pdfBuffer, filename) {
   const blob = new Blob([pdfBuffer], { type: 'application/pdf' });
   const url = URL.createObjectURL(blob);
   
-  const pdfUrl = await _GSPS2PDF({
-    psDataURL: url,
-    filename,
-    outputFilename: `compressed_${filename}`
-  });
+  try {
+    const compressedPdfUrl = await _GSPS2PDF({
+      psDataURL: url,
+      filename,
+      outputFilename: `compressed_${filename}`
+    });
 
-  // Fetch the compressed PDF data
-  const response = await fetch(pdfUrl);
-  const compressedBuffer = await response.arrayBuffer();
-  URL.revokeObjectURL(pdfUrl);
-  
-  return new Uint8Array(compressedBuffer);
+    const response = await fetch(compressedPdfUrl);
+    const compressedBuffer = await response.arrayBuffer();
+    
+    // Clean up URLs
+    URL.revokeObjectURL(url);
+    URL.revokeObjectURL(compressedPdfUrl);
+    
+    return new Uint8Array(compressedBuffer);
+  } catch (error) {
+    URL.revokeObjectURL(url);
+    throw error;
+  }
 }
 
 export async function processZipFiles(
