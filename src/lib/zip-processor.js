@@ -29,7 +29,7 @@ function isPdf(buffer) {
   return magicNumber === '%PDF';
 }
 
-async function compressPdfWithGs(pdfBuffer, filename) {
+async function compressPdfWithGs(pdfBuffer, filename, compressionMode = '/ebook') {
   const blob = new Blob([pdfBuffer], { type: 'application/pdf' });
   const url = URL.createObjectURL(blob);
   
@@ -37,7 +37,8 @@ async function compressPdfWithGs(pdfBuffer, filename) {
     const compressedPdfUrl = await _GSPS2PDF({
       psDataURL: url,
       filename,
-      outputFilename: `compressed_${filename}`
+      outputFilename: `compressed_${filename}`,
+      compressionMode
     });
 
     const response = await fetch(compressedPdfUrl);
@@ -62,6 +63,7 @@ export async function processZipFiles(
   const { 
     onProgress, 
     skipCompression = false,
+    compressionMode = '/ebook',
     onError,
     onComplete 
   } = options;
@@ -153,7 +155,8 @@ export async function processZipFiles(
               try {
                 const compressedPdf = await compressPdfWithGs(
                   pdfBuffer,
-                  path.split('/').pop()
+                  path.split('/').pop(),
+                  compressionMode
                 );
                 outputZip.file(path, compressedPdf);
               } catch (error) {

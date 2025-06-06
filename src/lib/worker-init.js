@@ -17,6 +17,7 @@ export async function _GSPS2PDF(dataStruct) {
     psDataURL: dataStruct.psDataURL,
     filename: dataStruct.filename,
     outputFilename: dataStruct.outputFilename,
+    compressionMode: dataStruct.compressionMode,
     target: 'wasm'
   });
 
@@ -24,6 +25,7 @@ export async function _GSPS2PDF(dataStruct) {
     psDataURL: dataStruct.psDataURL,
     filename: dataStruct.filename,
     outputFilename: dataStruct.outputFilename,
+    compressionMode: dataStruct.compressionMode,
     target: 'wasm' 
   });
   
