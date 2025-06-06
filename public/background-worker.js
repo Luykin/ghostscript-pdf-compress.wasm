@@ -76,10 +76,10 @@ function _GSPS2PDF(
   xhr.send();
 }
 
-self.addEventListener('message', function({data:e}) {
-  console.log('background-worker: Received message:', e);
+self.addEventListener('message', function(e) {
+  console.log('background-worker: Received message:', e.data);
   
-  if (e.target !== 'wasm'){
+  if (e.data.target !== 'wasm'){
     console.log('background-worker: Ignoring non-wasm message');
     return;
   }
