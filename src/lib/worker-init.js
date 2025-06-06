@@ -1,6 +1,6 @@
 export async function _GSPS2PDF(dataStruct) {
   const worker = new Worker(
-    new URL('./background-worker.js', import.meta.url),
+    '/background-worker.js',
     {type: 'module'}
   );
   
