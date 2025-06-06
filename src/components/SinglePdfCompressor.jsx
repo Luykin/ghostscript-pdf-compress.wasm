@@ -1,6 +1,22 @@
 import { useState } from "react";
 import { _GSPS2PDF } from "../lib/worker-init.js";
 
+function loadPDFData(response, filename) {
+  return new Promise((resolve, reject) => {
+    const xhr = new XMLHttpRequest();
+    xhr.open("GET", response);
+    xhr.responseType = "arraybuffer";
+    xhr.onload = function () {
+      window.URL.revokeObjectURL(response);
+      const blob = new Blob([xhr.response], {type: "application/pdf"});
+      const pdfURL = window.URL.createObjectURL(blob);
+      const size = xhr.response.byteLength;
+      resolve({pdfURL, size});
+    };
+    xhr.send();
+  });
+}
+
 export function SinglePdfCompressor() {
   const [state, setState] = useState("init");
   const [file, setFile] = useState(undefined);
