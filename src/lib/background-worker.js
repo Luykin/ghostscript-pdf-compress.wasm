@@ -7,46 +7,45 @@ var Module;
 function _GSPS2PDF(
   dataStruct,
   responseCallback,
+  quality = 'ebook' // 新增quality参数
 ) {
-  // first download the ps data
   var xhr = new XMLHttpRequest();
   xhr.open("GET", dataStruct.psDataURL);
   xhr.responseType = "arraybuffer";
   xhr.onload = function () {
-    console.log('onload')
-    // release the URL
     self.URL.revokeObjectURL(dataStruct.psDataURL);
-    //set up EMScripten environment
+    
     Module = {
       preRun: [
         function () {
-          self.Module.FS.writeFile("input.pdf", new Uint8Array(xhr.response));
+          self.Module.FS.writeFile(dataStruct.filename || "input.pdf", new Uint8Array(xhr.response));
         },
       ],
       postRun: [
         function () {
-          var uarray = self.Module.FS.readFile("output.pdf", { encoding: "binary" });
-          var blob = new Blob([uarray], { type: "application/octet-stream" });
-          var pdfDataURL = self.URL.createObjectURL(blob);
-          responseCallback({ pdfDataURL: pdfDataURL, url: dataStruct.url });
+          var uarray = self.Module.FS.readFile(dataStruct.outputFilename || "output.pdf", { encoding: "binary" });
+          responseCallback({ 
+            pdfData: uarray,
+            filename: dataStruct.outputFilename || "output.pdf"
+          });
         },
       ],
       arguments: [
         "-sDEVICE=pdfwrite",
         "-dCompatibilityLevel=1.4",
-        "-dPDFSETTINGS=/ebook",
+        `-dPDFSETTINGS=/${quality}`, // 使用传入的quality参数
         "-DNOPAUSE",
         "-dQUIET",
         "-dBATCH",
-        "-sOutputFile=output.pdf",
-        "input.pdf",
+        `-sOutputFile=${dataStruct.outputFilename || "output.pdf"}`,
+        dataStruct.filename || "input.pdf",
       ],
       print: function (text) {},
       printErr: function (text) {},
       totalDependencies: 0,
       noExitRuntime: 1
     };
-    // Module.setStatus("Loading Ghostscript...");
+
     if (!self.Module) {
       self.Module = Module;
       loadScript();
@@ -60,15 +59,14 @@ function _GSPS2PDF(
   xhr.send();
 }
 
-
 self.addEventListener('message', function({data:e}) {
-  console.log("message", e)
-  // e.data contains the message sent to the worker.
   if (e.target !== 'wasm'){
     return;
   }
-  console.log('Message received from main script', e.data);
-  _GSPS2PDF(e.data, ({pdfDataURL}) => self.postMessage(pdfDataURL))
+  _GSPS2PDF(e.data, ({pdfData, filename}) => 
+    self.postMessage({ pdfData, filename }), 
+    e.data.quality || 'ebook'
+  );
 });
 
-console.log("Worker ready")
+console.log("Worker ready");
